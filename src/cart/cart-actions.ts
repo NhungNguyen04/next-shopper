@@ -8,7 +8,7 @@ import type { Cart } from './cart-types';
 export async function addProductToCart(productId: Id) {
   const cart = await getCart();
 
-  let cartItems: Cart = [];
+  let cartItems: { productId: Id; count: number }[] = [];
 
   if (cart) {
     cartItems = cart.cartItems.map((cartItem) => ({
@@ -37,11 +37,12 @@ export async function decreaseProductInCart(productId: Id) {
 
   if (!cart) return;
 
-  // TODO: Refactor typings, fix namings (cartItems etc.)
-  let cartItems: Cart = cart.cartItems.map((cartItem) => ({
-    productId: cartItem.product.id,
-    count: cartItem.count,
-  }));
+  let cartItems: { productId: Id; count: number }[] = cart.cartItems.map(
+    (cartItem) => ({
+      productId: cartItem.product.id,
+      count: cartItem.count,
+    })
+  );
 
   const foundInCart = cartItems.find(
     (cartItem) => cartItem.productId === productId,
@@ -55,14 +56,14 @@ export async function decreaseProductInCart(productId: Id) {
         (cartItem) => cartItem.productId !== productId,
       );
     }
-  }
 
-  const cookieStore = cookies();
+    const cookieStore = cookies();
 
-  if (cartItems.length) {
-    cookieStore.set('cart', JSON.stringify(cartItems));
-  } else {
-    cookieStore.delete('cart');
+    if (cartItems.length) {
+      cookieStore.set('cart', JSON.stringify(cartItems));
+    } else {
+      cookieStore.delete('cart');
+    }
   }
 }
 
@@ -71,7 +72,7 @@ export async function removeProductFromCart(productId: Id) {
 
   if (!cart) return;
 
-  const cartItems: Cart = [];
+  const cartItems: { productId: Id; count: number }[] = [];
 
   for (const cartItem of cart.cartItems) {
     const { product } = cartItem;
@@ -80,12 +81,14 @@ export async function removeProductFromCart(productId: Id) {
     }
   }
 
-  const cookieStore = cookies();
+  if (cart.cartItems.some(item => item.product.id === productId)) {
+    const cookieStore = cookies();
 
-  if (cartItems.length) {
-    cookieStore.set('cart', JSON.stringify(cartItems));
-  } else {
-    cookieStore.delete('cart');
+    if (cartItems.length) {
+      cookieStore.set('cart', JSON.stringify(cartItems));
+    } else {
+      cookieStore.delete('cart');
+    }
   }
 }
 

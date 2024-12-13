@@ -10,9 +10,14 @@ export const getCart = cache(async (): Promise<Maybe<CartDetails>> => {
 
   const cookieValue = cookieStore.get('cart')?.value;
 
-  const cart = cartSchema.safeParse(
-    cookieValue ? JSON.parse(cookieValue) : null,
-  );
+  let parsedCart = null;
+  try {
+    parsedCart = cookieValue ? JSON.parse(cookieValue) : null;
+  } catch (error) {
+    return null;
+  }
+
+  const cart = cartSchema.safeParse(parsedCart);
 
   if (!cart.success) return null;
 

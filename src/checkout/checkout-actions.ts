@@ -9,9 +9,9 @@ import { redirect } from 'next/navigation';
 // Server actions should be async functions.
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function completeCheckout(
-  currentState: ServerActionResult<ShippingInfo, never> | null,
+  currentState: ServerActionResult<ShippingInfo, { fieldErrors: Record<string, any> }> | null,
   formData: FormData,
-): Promise<ServerActionResult<ShippingInfo, never>> {
+): Promise<ServerActionResult<ShippingInfo, { fieldErrors: Record<string, any> }>> {
   const input = {
     continentId: formData.get('continentId'),
     regionId: formData.get('regionId'),
@@ -24,7 +24,7 @@ export async function completeCheckout(
   const inputResult = shippingInfoSchema.safeParse(input);
 
   if (!inputResult.success) {
-    return { success: false, fieldErrors: inputResult.error.format() };
+    return { success: false, error: JSON.stringify(inputResult.error.format()) };
   }
 
   const cookieStore = cookies();
@@ -32,4 +32,5 @@ export async function completeCheckout(
   cookieStore.delete('cart');
 
   redirect('/checkout/success');
+  return { success: true, data: { ...input, fieldErrors: {} as Record<string, any> } };
 }
